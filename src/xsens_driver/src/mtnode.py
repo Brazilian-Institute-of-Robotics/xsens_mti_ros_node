@@ -6,7 +6,7 @@ import mtdevice
 import math
 import pdb
 
-from std_msgs.msg import Header, Float32, Float64
+from std_msgs.msg import Header, Float32, Float64, Float64MultiArray
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import TwistStamped, Vector3Stamped, QuaternionStamped
 from gps_common.msg import GPSFix, GPSStatus
@@ -100,7 +100,7 @@ class XSensDriver(object):
 		self.ori_pub = rospy.Publisher('mti/filter/orientation', orientationEstimate, queue_size=10) # XKF/XEE orientation
 		self.vel_pub = rospy.Publisher('mti/filter/velocity', velocityEstimate, queue_size=10) # XKF/XEE velocity
 		self.pos_pub = rospy.Publisher('mti/filter/position', positionEstimate, queue_size=10) # XKF/XEE position
-		
+		self.matrix_pub = rospy.Publisher('mti/orientation/rot_matrix',Float64MultiArray,queue_size=10) #matrix message
 		self.temp_pub = rospy.Publisher('temperature', Float32, queue_size=10)	# decide type
 		
 
@@ -176,6 +176,9 @@ class XSensDriver(object):
 		pos_msg = positionEstimate()
 		pub_pos = False
 		
+		matrix_msg=Float64MultiArray()
+		m_pub = False
+
 		secs = 0
 		nsecs = 0
 		
@@ -258,7 +261,12 @@ class XSensDriver(object):
 				pub_ori = True
 				ori_msg.roll = orient_data['Roll']
 				ori_msg.pitch = orient_data['Pitch']
-				ori_msg.yaw = orient_data['Yaw']				
+				ori_msg.yaw = orient_data['Yaw']
+			elif 'a' in orient_data:
+				m_pub = True 
+				matrix_msg.data = 	[orient_data['a'],orient_data['c'],orient_data['b'],orient_data['e'],orient_data['d'],orient_data['g'],orient_data['f'],orient_data['i'],orient_data['h']]
+				#print(orient_data['a']) #aqui
+				
 			else:
 				raise MTException('Unsupported message in XDI_OrientationGroup')
 
@@ -359,7 +367,11 @@ class XSensDriver(object):
 			# Comment the two lines below if you need ROS time
 			pos_msg.header.stamp.secs = secs
 			pos_msg.header.stamp.nsecs = nsecs	
-			self.pos_pub.publish(pos_msg)		
+			self.pos_pub.publish(pos_msg)
+		if m_pub:
+			self.matrix_pub.publish(matrix_msg)
+			
+
 			
 
 def main():
