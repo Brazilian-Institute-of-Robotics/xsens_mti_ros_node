@@ -54,7 +54,8 @@ add_message_files(
    gnssSample.msg
    orientationEstimate.msg
    velocityEstimate.msg
-   positionEstimate.msg		   
+   positionEstimate.msg
+   rotationMatrix.msg		   
  )
 
 ## Generate services in the 'srv' folder

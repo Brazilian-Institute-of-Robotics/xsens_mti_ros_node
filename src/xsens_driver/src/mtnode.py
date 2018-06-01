@@ -12,7 +12,7 @@ from geometry_msgs.msg import TwistStamped, Vector3Stamped, QuaternionStamped
 from gps_common.msg import GPSFix, GPSStatus
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from custom_msgs.msg import sensorSample, baroSample, gnssSample
-from custom_msgs.msg import positionEstimate, velocityEstimate, orientationEstimate
+from custom_msgs.msg import positionEstimate, velocityEstimate, orientationEstimate, rotationMatrix
 
 # transform Euler angles or matrix into quaternions
 from math import pi, radians
@@ -100,7 +100,7 @@ class XSensDriver(object):
 		self.ori_pub = rospy.Publisher('mti/filter/orientation', orientationEstimate, queue_size=10) # XKF/XEE orientation
 		self.vel_pub = rospy.Publisher('mti/filter/velocity', velocityEstimate, queue_size=10) # XKF/XEE velocity
 		self.pos_pub = rospy.Publisher('mti/filter/position', positionEstimate, queue_size=10) # XKF/XEE position
-		self.matrix_pub = rospy.Publisher('mti/orientation/rot_matrix',Float64MultiArray,queue_size=10) #matrix message
+		self.matrix_pub = rospy.Publisher('mti/orientation/rot_matrix',rotationMatrix,queue_size=10) #matrix message
 		self.temp_pub = rospy.Publisher('temperature', Float32, queue_size=10)	# decide type
 		
 
@@ -176,7 +176,7 @@ class XSensDriver(object):
 		pos_msg = positionEstimate()
 		pub_pos = False
 		
-		matrix_msg=Float64MultiArray()
+		matrix_msg=rotationMatrix()
 		m_pub = False
 
 		secs = 0
@@ -264,8 +264,7 @@ class XSensDriver(object):
 				ori_msg.yaw = orient_data['Yaw']
 			elif 'a' in orient_data:
 				m_pub = True 
-				matrix_msg.data = 	[orient_data['a'],orient_data['c'],orient_data['b'],orient_data['e'],orient_data['d'],orient_data['g'],orient_data['f'],orient_data['i'],orient_data['h']]
-				#print(orient_data['a']) #aqui
+				matrix_msg.key, matrix_msg.values= zip(*orient_data.items())
 				
 			else:
 				raise MTException('Unsupported message in XDI_OrientationGroup')
