@@ -6,7 +6,7 @@ import mtdevice
 import math
 import pdb
 
-from std_msgs.msg import Header, Float32, Float64, Float64MultiArray
+from std_msgs.msg import Header, Float32, Float64
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import TwistStamped, Vector3Stamped, QuaternionStamped
 from gps_common.msg import GPSFix, GPSStatus
@@ -100,7 +100,7 @@ class XSensDriver(object):
 		self.ori_pub = rospy.Publisher('mti/filter/orientation', orientationEstimate, queue_size=10) # XKF/XEE orientation
 		self.vel_pub = rospy.Publisher('mti/filter/velocity', velocityEstimate, queue_size=10) # XKF/XEE velocity
 		self.pos_pub = rospy.Publisher('mti/filter/position', positionEstimate, queue_size=10) # XKF/XEE position
-		self.matrix_pub = rospy.Publisher('mti/orientation/rot_matrix',rotationMatrix,queue_size=10) #matrix message
+		self.matrix_pub = rospy.Publisher('mti/orientation/rot_matrix',rotationMatrix,queue_size=10) #rotation matrix message
 		self.temp_pub = rospy.Publisher('temperature', Float32, queue_size=10)	# decide type
 		
 
@@ -177,7 +177,7 @@ class XSensDriver(object):
 		pub_pos = False
 		
 		matrix_msg=rotationMatrix()
-		m_pub = False
+		pub_matrix = False
 
 		secs = 0
 		nsecs = 0
@@ -263,7 +263,7 @@ class XSensDriver(object):
 				ori_msg.pitch = orient_data['Pitch']
 				ori_msg.yaw = orient_data['Yaw']
 			elif 'a' in orient_data:
-				m_pub = True 
+				pub_matrix = True 
 				matrix_msg.key, matrix_msg.values= zip(*orient_data.items())
 				
 			else:
@@ -367,7 +367,10 @@ class XSensDriver(object):
 			pos_msg.header.stamp.secs = secs
 			pos_msg.header.stamp.nsecs = nsecs	
 			self.pos_pub.publish(pos_msg)
-		if m_pub:
+		if pub_matrix:
+			matrix_msg.header= h
+			matrix_msg.header.stamp.secs = secs
+			matrix_msg.header.stamp.nsecs = nsecs
 			self.matrix_pub.publish(matrix_msg)
 			
 
